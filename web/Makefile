@@ -10,10 +10,7 @@ GOFLAGS?=-v -tags $(GO_BUILD_TAGS)
 GOCACHE?=$(abspath ../.cache/go-build)
 GOMODCACHE?=$(abspath ../.cache/go-mod)
 GOTOOLCHAIN?=local
-<<<<<<< HEAD
 export CGO_ENABLED
-=======
->>>>>>> 83c79087 (Fix Windows build flow)
 export GOCACHE
 export GOMODCACHE
 export GOTOOLCHAIN
@@ -33,11 +30,6 @@ LAUNCHER_GUI_LDFLAG=
 
 ifeq ($(OS),Windows_NT)
 	POWERSHELL=powershell -NoProfile -Command
-<<<<<<< HEAD
-=======
-	GO=go
-	WEB_GO=go
->>>>>>> 83c79087 (Fix Windows build flow)
 	WINDOWS_GOARCH_RAW:=$(strip $(shell go env GOARCH 2>NUL))
 endif
 
@@ -172,21 +164,13 @@ endif
 
 build-frontend:
 ifeq ($(OS),Windows_NT)
-<<<<<<< HEAD
-	@$(POWERSHELL) "$$frontend='$(FRONTEND_DIR)'; $$stamp='$(FRONTEND_INSTALL_STAMP)'; $$pkg='$(FRONTEND_DIR)/package.json'; $$lock='$(FRONTEND_DIR)/pnpm-lock.yaml'; $$expected=((Get-FileHash -LiteralPath $$pkg -Algorithm SHA256).Hash + ':' + (Get-FileHash -LiteralPath $$lock -Algorithm SHA256).Hash); $$nodeModules=$$frontend + '/node_modules'; $$tsc=$$nodeModules + '/.bin/tsc'; $$current=''; if (Test-Path -LiteralPath $$stamp) { $$current=(Get-Content -LiteralPath $$stamp -Raw).Trim() }; if ((-not (Test-Path -LiteralPath $$nodeModules)) -or (-not (Test-Path -LiteralPath $$tsc)) -or ($$current -ne $$expected)) { Write-Host 'Installing frontend dependencies...'; Push-Location $$frontend; try { $$env:CI='true'; pnpm install --frozen-lockfile } finally { Pop-Location; Remove-Item Env:CI -ErrorAction SilentlyContinue }; Set-Content -LiteralPath $$stamp -Value $$expected -NoNewline }"
+	@$(POWERSHELL) "if ((-not (Test-Path -LiteralPath '$(FRONTEND_DIR)/node_modules')) -or (-not (Test-Path -LiteralPath '$(FRONTEND_DIR)/node_modules/.bin/tsc')) -or (-not (Test-Path -LiteralPath '$(FRONTEND_INSTALL_STAMP)')) -or ((Get-Content -LiteralPath '$(FRONTEND_INSTALL_STAMP)' -Raw).Trim() -ne (((Get-FileHash -LiteralPath '$(FRONTEND_DIR)/package.json' -Algorithm SHA256).Hash + ':' + (Get-FileHash -LiteralPath '$(FRONTEND_DIR)/pnpm-lock.yaml' -Algorithm SHA256).Hash)))) { Write-Host 'Installing frontend dependencies...'; Push-Location '$(FRONTEND_DIR)'; try { pnpm install --frozen-lockfile } finally { Pop-Location }; Set-Content -LiteralPath '$(FRONTEND_INSTALL_STAMP)' -Value (((Get-FileHash -LiteralPath '$(FRONTEND_DIR)/package.json' -Algorithm SHA256).Hash + ':' + (Get-FileHash -LiteralPath '$(FRONTEND_DIR)/pnpm-lock.yaml' -Algorithm SHA256).Hash)) -NoNewline }"
 else
 	@expected_stamp="$$(cat $(FRONTEND_DIR)/package.json $(FRONTEND_DIR)/pnpm-lock.yaml | cksum | awk '{print $$1 ":" $$2}')"; \
 	if [ ! -d $(FRONTEND_DIR)/node_modules ] || \
 		[ ! -x $(FRONTEND_DIR)/node_modules/.bin/tsc ] || \
 		[ ! -f $(FRONTEND_INSTALL_STAMP) ] || \
 		[ "$$(cat $(FRONTEND_INSTALL_STAMP) 2>/dev/null)" != "$$expected_stamp" ]; then \
-=======
-	@if not exist "$(FRONTEND_DIR)\node_modules" (echo Installing frontend dependencies... && cd $(FRONTEND_DIR) && pnpm install --frozen-lockfile --store-dir .pnpm-store) else echo Frontend dependencies already installed.
-else
-	@if [ ! -d $(FRONTEND_DIR)/node_modules ] || \
-		[ $(FRONTEND_DIR)/package.json -nt $(FRONTEND_DIR)/node_modules ] || \
-		[ $(FRONTEND_DIR)/pnpm-lock.yaml -nt $(FRONTEND_DIR)/node_modules ]; then \
->>>>>>> 83c79087 (Fix Windows build flow)
 		echo "Installing frontend dependencies..."; \
 		(cd $(FRONTEND_DIR) && CI=true pnpm install --frozen-lockfile) && \
 		printf '%s\n' "$$expected_stamp" > $(FRONTEND_INSTALL_STAMP); \
