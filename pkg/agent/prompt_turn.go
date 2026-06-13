@@ -217,10 +217,6 @@ func toolImageFollowUpPromptMessage(media []string) providers.Message {
 	return promptMessageWithMetadata(msg, PromptLayerTurn, PromptSlotToolResult, PromptSourceToolResult)
 }
 
-func isTurnPromptMessage(msg providers.Message) bool {
-	return msg.PromptLayer == string(PromptLayerTurn)
-}
-
 func steeringPromptMessage(msg providers.Message) providers.Message {
 	return promptMessageWithDefaultMetadata(msg, PromptLayerTurn, PromptSlotSteering, PromptSourceSteering)
 }

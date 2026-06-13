@@ -31,7 +31,7 @@ func (p *Pipeline) CallLLM(
 
 	// PreLLM: resolve media refs (except on iteration 1 where user media is already resolved)
 	if iteration > 1 {
-		exec.messages = resolveMediaRefs(exec.messages, p.MediaStore, maxMediaSize)
+		exec.messages = resolveMediaRefs(exec.messages, p.MediaStore, maxMediaSize, exec.currentTurnStart)
 	}
 
 	// PreLLM: graceful terminal handling
@@ -388,7 +388,13 @@ func (p *Pipeline) CallLLM(
 				fullHistory := append(append([]providers.Message(nil), trimmedHistory...), protectedTurnTail...)
 				rebuildPromptReq := promptBuildRequestForTurn(ts, fullHistory, exec.summary, "", nil, p.Cfg)
 				rebuildPromptReq.ActiveSkills = append([]string(nil), contextualSkills...)
-				return ts.agent.ContextBuilder.BuildMessagesFromPrompt(rebuildPromptReq)
+				rebuilt := ts.agent.ContextBuilder.BuildMessagesFromPrompt(rebuildPromptReq)
+				return resolveMediaRefs(
+					rebuilt,
+					p.MediaStore,
+					maxMediaSize,
+					len(rebuilt)-len(protectedTurnTail),
+				)
 			}
 			originalHistoryCount := len(exec.history)
 			var fit bool
@@ -408,6 +414,7 @@ func (p *Pipeline) CallLLM(
 			)
 			exec.history = append(trimmedStableHistory, protectedTurnTail...)
 			exec.messages = buildMessages(trimmedStableHistory)
+			exec.currentTurnStart = len(exec.messages) - len(protectedTurnTail)
 			if exec.gracefulTerminal {
 				msgs := append([]providers.Message(nil), exec.messages...)
 				exec.callMessages = append(msgs, ts.interruptHintMessage())

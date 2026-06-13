@@ -109,9 +109,6 @@ func sameCandidateSet(a, b []providers.FallbackCandidate) bool {
 
 func messagesContainCurrentTurnMediaTurn(messages []providers.Message) bool {
 	for _, msg := range messages {
-		if !isTurnPromptMessage(msg) {
-			continue
-		}
 		if len(msg.Media) > 0 {
 			return true
 		}
@@ -124,7 +121,7 @@ func messagesContainCurrentTurnMediaTurn(messages []providers.Message) bool {
 
 func (p *Pipeline) routeMediaTurn(ts *turnState, exec *turnExecution) error {
 	if p == nil || ts == nil || ts.agent == nil || exec == nil ||
-		!messagesContainCurrentTurnMediaTurn(exec.callMessages) {
+		!messagesContainCurrentTurnMediaTurn(currentTurnMessages(exec.callMessages, exec.currentTurnStart)) {
 		return nil
 	}
 
